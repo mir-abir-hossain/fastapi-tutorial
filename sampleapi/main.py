@@ -1,6 +1,8 @@
 from enum import Enum
+from typing import Annotated
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Path, Query, Response
+from fastapi.responses import JSONResponse
 
 class ModelName(str, Enum):
     alexnet = "alexnet"
@@ -50,3 +52,22 @@ async def read_item(item_id: int, q: int|None = None, short: bool = False):
 @app.get("/item/")
 async def read_item(product_no: int, limit: int, queue: int=5):
     return {"product_no": product_no + limit + queue}
+
+
+@app.get("/itemms/")
+async def read_items(q: Annotated[str, Query(max_length=50)]=None):
+    results = {"items":[{"item_id":"Foo"}, {"item_id": "Bar"}]}
+    if q:
+        results.update({"q":q})
+    return results
+
+@app.get("/ittemms/", response_model=None)
+async def read_ittemms(q: Annotated[list[str], Query()]=None)->Response|dict:
+    results = {"items":[{"item_id":"Foo"}, {"item_id": "Bar"}]}
+    if q:
+        results.update({"q":q})
+    return JSONResponse(content={"message":"ok", "content":results})
+
+@app.get("/itemss/{item_id}")
+async def get_itemss(item_id: Annotated[int, Path(ge=3)]):
+    return item_id
